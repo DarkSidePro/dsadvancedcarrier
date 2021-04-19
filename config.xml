@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+	<name>dsadvencedcarrier</name>
+	<displayName><![CDATA[DS: Advanced Carrier]]></displayName>
+	<version><![CDATA[1.0.0]]></version>
+	<description><![CDATA[DS: Advanced Carrier]]></description>
+	<author><![CDATA[Dark-Side.pro]]></author>
+	<tab><![CDATA[shipping_logistics]]></tab>
+	<is_configurable>1</is_configurable>
+	<need_instance>1</need_instance>
+</module>
