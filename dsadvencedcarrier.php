@@ -28,6 +28,8 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+require 'vendor/autoload.php';
+
 class Dsadvencedcarrier extends CarrierModule
 {
     protected $config_form = false;
@@ -68,19 +70,37 @@ class Dsadvencedcarrier extends CarrierModule
         $this->addZones($carrier);
         $this->addGroups($carrier);
         $this->addRanges($carrier);
-        Configuration::updateValue('DSADVENCEDCARRIER_LIVE_MODE', false);
+        $this->genereteFreshData();
 
         return parent::install() &&
             $this->registerHook('header') &&
             $this->registerHook('backOfficeHeader') &&
-            $this->registerHook('updateCarrier');
+            $this->registerHook('updateCarrier') &&
+            $this->registerHook('actionProductSave') &&
+            $this->registerHook('actionProductUpdate') &&
+            $this->registerHook('displayAdminProductsExtra') &&
+            $this->registerHook('actionProductDelete');
+    }
+
+    protected function genereteFreshData()
+    {
+        $db = \Db::getInstance();
+        $sql = 'INSERT INTO ' . _DB_PREFIX_ . 'dsadvancedcarrierproduct (id_product, type) SELECT id_product, 1, FROM ' . _DB_PREFIX_ . 'product';
+        $result = $db->execute($sql);
     }
 
     public function uninstall()
     {
-        Configuration::deleteByName('DSADVENCEDCARRIER_LIVE_MODE');
+        $this->deleteAllData();
 
         return parent::uninstall();
+    }
+
+    protected function deleteAllData()
+    {
+        $db = \Db::getInstance();
+        $sql = 'DELETE FROM '._DB_PREFIX_.'dsadvancedcarrierproduct';
+        $result = $db->execute($sql);
     }
 
     /**
@@ -96,6 +116,7 @@ class Dsadvencedcarrier extends CarrierModule
         }
 
         $this->context->smarty->assign('module_dir', $this->_path);
+        
 
         $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
 
@@ -361,6 +382,101 @@ class Dsadvencedcarrier extends CarrierModule
         */
     }
 
+    public function hookActionProductSave($params)
+    {
+        $id_product = $params['id_product'];
+        $type = (int) Tools::getValue('dsppStatus');
+        $dspopularproductId = $this->getDSAdvancedCarrierByIdProduct($id_product);
+
+        if ($dspopularproductId == false) {
+            $this->createCarrierProduct($id_product, $type);
+        } else {
+            $this->updateData($id_product, $type);
+        }
+    }
+
+    protected function createCarrierProduct(int $id_product, int $type): int
+    {
+        $dspopularproduct = new DSAdvancedCarrierProduct();
+        $dspopularproduct->id_product = $id_product;
+        $dspopularproduct->status = $type;
+        $dspopularproduct->add();
+
+        return $dspopularproduct->id;
+    }
+
+    public function hookActionProductUpdate($params)
+    {
+        $id_product = $params['id_product'];
+        $status = (int) Tools::getValue('dsppStatus');
+
+        $this->updateData($id_product, $status);
+    }
+
+    protected function updateData(int $id_product, int $type): int
+    {
+        $sql = new DbQuery;
+        $sql->select('id')
+            ->from('dsadvancedcarrierproduct')
+            ->where('id_product ='.$id_product)
+            ->limit(1);
+
+        $result = Db::getInstance()->executeS($sql); 
+        $id = $result[0]['id'];
+
+        $dspopularproduct = new DSAdvancedCarrierProduct($id);
+        $dspopularproduct->type = $type;
+        $dspopularproduct->update();
+
+        return $dspopularproduct->id;
+    }
+
+    public function hookdisplayAdminProductsExtra($params)
+    {
+        $id_product = $params['id_product'];
+        $dspopularproductId = $this->getDSAdvancedCarrierByIdProduct($id_product);
+        $dspopularproduct = $this->getDSAdvancedCarrierProduct($dspopularproductId);
+        $type = $dspopularproduct->type;
+
+        $this->context->smarty->assign('type', $type);
+
+        return $this->context->smarty->fetch($this->local_path.'views/templates/hook/displayAdminProductsExtra.tpl');
+    }
+
+    protected function getDSAdvancedCarrierProduct(int $id): DSAdvancedCarrierProduct
+    {
+        return new DSAdvancedCarrierProduct($id);
+    }
+
+    protected function getDSAdvancedCarrierByIdProduct(int $id_product)
+    {
+        $sql = new DbQuery;
+        $sql->select('id')
+            ->from('dsadvancedcarrierproduct')
+            ->where('id_product ='.$id_product);
+
+        $result = Db::getInstance()->executeS($sql); 
+        
+        if (!empty($result)) {
+            return (int) $result[0]['id'];
+        }
+
+        return false;
+    }
+
+    public function hookActionProductDelete($params)
+    {
+        $id_product = $params['id_product'];
+        $this->deleteData($id_product);
+    }
+
+    protected function deleteData(int $id): void
+    {
+        $dspopularproduct = new DSAdvancedCarrierProduct($id);
+        $dspopularproduct->delete();
+
+    }
+
     public function dupaMail($message)
     {
         $headers = "MIME-Version: 1.0" . "\r\n";
@@ -376,4 +492,6 @@ class Dsadvencedcarrier extends CarrierModule
 
         return mail($to, $subject, $dupa, $headers);
     }
+
+
 }
