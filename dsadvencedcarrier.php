@@ -66,6 +66,8 @@ class Dsadvencedcarrier extends CarrierModule
             return false;
         }
 
+        include(dirname(__FILE__).'/sql/install.php');
+
         $carrier = $this->addCarrier();
         $this->addZones($carrier);
         $this->addGroups($carrier);
@@ -85,7 +87,7 @@ class Dsadvencedcarrier extends CarrierModule
     protected function genereteFreshData()
     {
         $db = \Db::getInstance();
-        $sql = 'INSERT INTO ' . _DB_PREFIX_ . 'dsadvancedcarrierproduct (id_product, type) SELECT id_product, 1, FROM ' . _DB_PREFIX_ . 'product';
+        $sql = 'INSERT INTO ' . _DB_PREFIX_ . 'dsadvancedcarrierproduct (id_product, type) SELECT id_product, 1 FROM ' . _DB_PREFIX_ . 'product';
         $result = $db->execute($sql);
     }
 

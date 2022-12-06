@@ -25,8 +25,8 @@
 <label class="form-check-label">
     <select class="form-control" required name="dsppStatus">
         <option value="1" {if $type == 1}selected{/if}>Gabaryt A</option>
-        <option value="2" {if $type == 1}selected{/if}>Gabaryt B</option>
-        <option value="3" {if $type == 1}selected{/if}>Gabaryt C</option>
+        <option value="2" {if $type == 2}selected{/if}>Gabaryt B</option>
+        <option value="3" {if $type == 3}selected{/if}>Gabaryt C</option>
     </select>
     {l s='Type' mod='dsadvencedcarrier'}
 </label>

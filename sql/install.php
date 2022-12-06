@@ -28,7 +28,7 @@ $sql = array();
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'dsadvancedcarrierproduct` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `id_product` int(11) NOT NULL,
-    `type` int(11) NOT NULL,
+    `type` TINYINT(4) NOT NULL,
     PRIMARY KEY  (`id`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
